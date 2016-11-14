@@ -54,7 +54,9 @@ class ArticlesController extends Controller
         $user = Auth::user();
             if(Gate::denies('auth_user', $article)){
                 if(Gate::denies('auth_admin', $article)){
-                    abort(403, 'Sorry, Can\'t access.');
+                    if(Gate::denies('auth_superAdmin', $article)){
+                        abort(403, 'Sorry, Can\'t access.');
+                    }
                 }
             }
 
@@ -67,7 +69,9 @@ class ArticlesController extends Controller
 
         if(Gate::denies('auth_user', $article)){
             if(Gate::denies('auth_admin', $article)){
+                if(Gate::denies('auth_superAdmin', $article)){
                     abort(403, 'Sorry, Can\'t access.');
+                }
             }
         }
 
@@ -97,7 +101,9 @@ class ArticlesController extends Controller
 
         if(Gate::denies('auth_user', $article)){
             if(Gate::denies('auth_admin', $article)){
+                if(Gate::denies('auth_superAdmin', $article)){
                     abort(403, 'Sorry, Can\'t access.');
+                }
             }
         }
         $article->delete();
@@ -128,8 +134,9 @@ class ArticlesController extends Controller
 
         $id_user->roles()->attach(2);
 
-        return redirect('articles/admin');
+        return redirect('articles/superAdmin');
     }
+
 
     public function make_user($id)
     {
@@ -141,7 +148,7 @@ class ArticlesController extends Controller
 
             $id_user->roles()->attach(3);
 
-            return redirect('articles/admin');
+            return redirect('articles/superAdmin');
         }
         return 'already a user';
         

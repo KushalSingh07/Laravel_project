@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-// use App\User;
-// use App\Article;
+use App\User;
+use App\Article;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class AuthUserPolicy
@@ -21,10 +21,16 @@ class AuthUserPolicy
     }
 
     public function auth_user($user, $article)
-     {
-            if($user->id == $article->user_id)
-                return true;
-     }
+    {
+        if($user->id == $article->user_id)
+            return true;
+    }
+
+    public function auth_superAdmin($user)
+    {
+        if($user->isSuperAdmin())
+            return true;
+    }
 
     public function auth_admin($user)
     {

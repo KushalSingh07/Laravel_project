@@ -60,7 +60,7 @@ class ArticlesController extends Controller
                 }
             }
 
-            return view('articles.edit', compact('article'));
+        return view('articles.edit', compact('article'));
     }
 
     public function update($id, ArticleRequest $request)
@@ -123,11 +123,9 @@ class ArticlesController extends Controller
     {
         $id_user = User::findOrFail($id);
 
-        if($id_user->isIdAdmin($id_user))
+        if(Gate::allows('auth_id', $id_user))
         {
-
             return 'already an admin';
-
         }
         
         $id_user->roles()->detach(3);
@@ -142,7 +140,7 @@ class ArticlesController extends Controller
     {
         $id_user = User::findOrFail($id);
 
-        if($id_user->isIdAdmin($id_user))
+        if(Gate::allows('auth_id', $id_user))
         {
             $id_user->roles()->detach(2);
 

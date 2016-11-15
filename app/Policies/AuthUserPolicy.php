@@ -37,10 +37,4 @@ class AuthUserPolicy
         if($user->isAdmin())
             return true;
     }
-
-    public function auth_id($user, $id_user)
-    {
-        if(isIdAdmin($id_user))
-            return true;
-    }
 }

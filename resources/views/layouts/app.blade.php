@@ -62,6 +62,11 @@
 
                                 <ul class="dropdown-menu" role="menu">
                                     <li><a href=" {{ url('/articles/myarticles')}} ">My Articles</a></li>
+                                    @can('auth_idSuper', Auth::user())
+                                        <li>
+                                            <a href=" {{ url('users')}} ">Users</a>
+                                        </li>
+                                    @endcan
                                     <li>
                                         <a href="{{ url('/logout') }}"
                                             onclick="event.preventDefault();

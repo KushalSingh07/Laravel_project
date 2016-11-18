@@ -21,6 +21,7 @@ class MustBeAdmin
         if ($user && $user->isSuperAdmin()) {
             return $next($request);
         }
-        abort(404, 'Can\'t access');
+        // Session::flash('status', 'Can\'t access this page');
+        return redirect('articles');
     }
 }

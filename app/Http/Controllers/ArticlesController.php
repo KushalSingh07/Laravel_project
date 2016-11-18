@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\User;
+use App\Role;
 use Gate;
 use Session;
 use Illuminate\Http\Request;
@@ -11,10 +12,14 @@ use App\Http\Requests\ArticleRequest;
 
 class ArticlesController extends Controller
 {
+    private $admin;
+    private $user;
     public function __construct()
     {
         $this->middleware('auth', ['only' => ['create', 'edit']]);
-        $this->middleware('admin', ['only' => ['admin', 'make_admin', 'make_user']]);
+        $this->middleware('admin', ['only' => ['superAdmin', 'make_admin', 'make_user']]);
+        $this->admin = Role::where('name', 'admin')->first();
+        $this->user = Role::where('name', 'user')->first();
     }
 
     public function index()
@@ -53,11 +58,8 @@ class ArticlesController extends Controller
         $article = Article::findOrFail($id);
         $user = Auth::user();
             if(Gate::denies('auth_user', $article)){
-                if(Gate::denies('auth_admin', $article)){
-                    if(Gate::denies('auth_superAdmin', $article)){
-                        abort(403, 'Sorry, Can\'t access.');
-                    }
-                }
+                Session::flash('status', 'Can\'t access this page');
+                return redirect('articles');
             }
 
         return view('articles.edit', compact('article'));
@@ -68,11 +70,8 @@ class ArticlesController extends Controller
         $article = Article::findOrFail($id);
 
         if(Gate::denies('auth_user', $article)){
-            if(Gate::denies('auth_admin', $article)){
-                if(Gate::denies('auth_superAdmin', $article)){
-                    abort(403, 'Sorry, Can\'t access.');
-                }
-            }
+            Session::flash('status', 'Can\'t access this page');
+            return redirect('articles');
         }
 
         $article->update($request->all());
@@ -88,10 +87,6 @@ class ArticlesController extends Controller
 
         $myarticles = $user->articles()->latest()->get();
 
-        if ($user->isSuperAdmin()) {
-            return redirect('articles/superAdmin');
-        }
-
         return view('articles.myarticles', compact('myarticles'));
     }
 
@@ -100,11 +95,8 @@ class ArticlesController extends Controller
         $article = Article::findOrFail($id);
 
         if(Gate::denies('auth_user', $article)){
-            if(Gate::denies('auth_admin', $article)){
-                if(Gate::denies('auth_superAdmin', $article)){
-                    abort(403, 'Sorry, Can\'t access.');
-                }
-            }
+            Session::flash('status', 'Can\'t access this page');
+            return redirect('articles');
         }
         $article->delete();
         Session::flash('status', 'Deleted Article');
@@ -123,16 +115,23 @@ class ArticlesController extends Controller
     {
         $id_user = User::findOrFail($id);
 
+        if(Gate::allows('auth_idSuper', $id_user))
+        {
+            Session::flash('status', 'Can\'t change role of super admin');
+            return redirect('users');
+        }
+
         if(Gate::allows('auth_id', $id_user))
         {
-            return 'already an admin';
+            Session::flash('status', 'Already an Admin');
+            return redirect('users');
         }
         
-        $id_user->roles()->detach(3);
+        $id_user->roles()->detach($this->user); //detach user
 
-        $id_user->roles()->attach(2);
+        $id_user->roles()->attach($this->admin); //attach admin
 
-        return redirect('articles/superAdmin');
+        return redirect('users');
     }
 
 
@@ -140,18 +139,21 @@ class ArticlesController extends Controller
     {
         $id_user = User::findOrFail($id);
 
+        if(Gate::allows('auth_idSuper', $id_user))
+        {
+            Session::flash('status', 'Can\'t change the role of super admin');
+            return redirect('users');
+        }
+
         if(Gate::allows('auth_id', $id_user))
         {
-            $id_user->roles()->detach(2);
+            $id_user->roles()->detach($this->admin); //detach admin
 
-            $id_user->roles()->attach(3);
+            $id_user->roles()->attach($this->user); //attach user
 
-            return redirect('articles/superAdmin');
+            return redirect('users');
         }
-        return 'already a user';
-        
-
-
-        
+        Session::flash('status', 'Already a user');
+        return redirect('articles');
     }
 }
